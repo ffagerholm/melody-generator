@@ -1,0 +1,9 @@
+*.mid
+.vscode/settings.json
+
+*.pyc
+
+.DS_Store
+
+# magenta models
+*.mag
