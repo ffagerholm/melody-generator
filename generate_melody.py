@@ -4,6 +4,7 @@ import time
 import argparse
 from itertools import cycle, islice
 import threading
+from cmd import Cmd
 
 from mido import Message, MidiFile, open_output, open_input
 
@@ -14,8 +15,9 @@ from magenta.models.shared import sequence_generator_bundle
 from magenta.music.protobuf import generator_pb2
 from magenta.music.protobuf import music_pb2
 import tensorflow.compat.v1 as tf
-# set logger level
+# set tensorflow logger level
 tf.get_logger().setLevel('ERROR')
+
 
 def run_generator(generator, primer_melody=[60], num_steps=128,
         temperature=1.0, beam_size=1, branch_factor=1, steps_per_iteration=1):
@@ -92,72 +94,108 @@ def play_notes(output, channel, notes):
         if getattr(t, "stop", False):
             break
 
-def play(input_device, output_device, channel, generator):
+class Prompt(Cmd):
+    prompt = 'mg> '
+    intro = "Welcome! Type ? to list commands"
+
     primer_melody = [60]
-    num_steps = 128
     temperature = 1.0
+    num_steps = 128
+    input_device = None
+    output_port = None
+    output_thread = None
+    channel = None
+    generator = None
+    
+    def generate_and_play(self):
+        if self.output_thread:
+            self.output_thread.stop = True
 
+        print("Generating sequence")
+        sequence = run_generator(
+            self.generator, 
+            primer_melody=self.primer_melody,
+            num_steps=self.num_steps,
+            temperature=self.temperature)
+        notes = sequence.notes
+        # Start new thread playing notes
+        self.output_thread = threading.Thread(
+            target=play_notes, 
+            args=(self.output_port, self.channel, notes), 
+            daemon=True)
+        self.output_thread.start()
+
+    def do_exit(self, inp):
+        '''Exit the application.'''
+        print("Exiting")
+        return True
+ 
+    def do_primer(self, inp):
+        '''Change the primer melody.'''
+        primer_melody = [int(n) for n in inp.split(' ')]
+        print('Setting new primer melody:', primer_melody)
+        self.primer_melody = primer_melody
+        self.generate_and_play()
+
+    def do_record(self, inp):
+        '''Record a new primer melody from an external MIDI device.'''
+        primer_length = int(inp)
+        with open_input("Arturia KeyStep 32") as input_port:
+            print(f"Waiting for input ({primer_length} notes)")
+            primer_melody = []
+            for message in islice(input_port, 2*primer_length):
+                print(message)
+                if message.type == 'note_on':
+                    primer_melody.append(message.note)
+                if message.type == 'control_change':
+                    primer_melody.append(-2)
+
+        self.primer_melody = primer_melody
+        self.generate_and_play()
+
+    def do_temperature(self, inp):
+        '''Change the temperature (amount of randomness) for the sequence generation.'''
+        self.temperature = float(inp)
+        print('Setting new temperature:', self.temperature)
+        self.generate_and_play()
+
+    def do_steps(self, inp):
+        '''Change the number of steps in the generated sequence.'''
+        self.num_steps = int(inp)
+        print('Setting new sequence length:', self.num_steps)
+        self.generate_and_play()
+    
+    def default(self, inp):
+        if inp[:1] == 'p':
+            return self.do_primer(inp[2:])
+        elif inp[:1] == 'r':
+            return self.do_record(inp[2:])
+        elif inp[:1] == 't':
+            return self.do_temperature(inp[2:])
+        elif inp[:1] == 's':
+            return self.do_steps(inp[2:])
+        elif inp == 'x':
+            return self.do_exit(inp[2:])
+
+    do_EOF = do_exit
+
+
+def play(input_device, output_device, channel, generator):
+    # TODO Separate code for CLI and application logic
     with open_output(output_device) as output:
-        print("")
-        try:
-            while True:
-                print("Generating sequence")
-                sequence = run_generator(
-                    generator, 
-                    primer_melody=primer_melody,
-                    num_steps=num_steps,
-                    temperature=temperature)
-                notes = sequence.notes
-                # Start new thread playing notes
-                thread = threading.Thread(
-                    target=play_notes, 
-                    args=(output, channel, notes), 
-                    daemon=True)
-                thread.start()
+        prompt = Prompt()
+        prompt.input_device = input_device
+        prompt.output_port = output
+        prompt.channel = channel
+        prompt.generator = generator
 
-                command = input('>>> ')
-                thread.stop = True
+        prompt.generate_and_play()
+        prompt.cmdloop()            
 
-                # num_steps = 128
-                # temperature = 1.0
-                # beam_size = 1
-                # branch_factor = 1
-
-                if command == 'exit':
-                    break
-
-                elif len(command) > 6 and command[:6] == "primer":
-                    primer_melody = [int(n) for n in command[7:].split(' ')]
-                    print('Setting new primer melody:', primer_melody)
-
-                elif len(command) > 4 and command[:3] == "rec":
-                    primer_length = int(command[4:])
-                    with open_input(input_device) as input_port:
-                        print(f"Waiting for input ({primer_length} notes)")
-                        primer_melody = []
-                        for message in islice(input_port, 2*primer_length):
-                            print(message)
-                            if message.type == 'note_on':
-                                primer_melody.append(message.note)
-                            if message.type == 'control_change':
-                                primer_melody.append(-2)
-
-                elif len(command) > 4 and command[:4] == "temp":
-                    temperature = float(command[5:])
-                    print('Setting new temperature:', temperature)
-
-                elif len(command) > 5 and command[:5] == "steps":
-                    num_steps = int(command[6:])
-                    print('Setting new sequence length:', num_steps)
-
-                else:
-                    continue
-
-        except:
-            # Release all notes 
-            for note in notes:
-                output.send(Message('note_off', 
-                            note=note.pitch, channel=channel))            
+        # Release all notes 
+        for note in range(128):
+            output.send(Message('note_off', 
+                        note=note, channel=channel))            
 
 def main():
     parser = argparse.ArgumentParser()
