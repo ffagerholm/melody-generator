@@ -82,7 +82,7 @@ class Prompt(Cmd):
         '''
         print("Generating new sequence",
             f"Primer: {self.primer_melody}",
-            f"Length {self.num_steps}",
+            f"Length: {self.num_steps}",
             f"Temperature: {self.temperature}", sep='\n')
 
         sequence = self.generator.generate_sequence(

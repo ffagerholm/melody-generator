@@ -52,14 +52,20 @@ A generated melody should start playing immediately after the application is
 initialized (may take a few seconds due to loading the model).
 
 The command line interface contains a number of options
-- `stop`: Stop the playback
-- `play`: Restart the playback
-- `new`: Generate a new sequence with the current settings
-- `primer`: Set a new primer sequence
-- `steps`: Set the number of steps in the sequence
-- `temperature`: Set the randomness level for the sequence generator
-- `record`: Record primer notes from the input MIDI device
-- `exit`: Exit the application
+- `stop` Stop the playback
+- `play` Restart the playback
+- `new` Generate a new sequence with the current settings
+- `primer` Set a new primer sequence
+- `steps` Set the number of steps in the sequence
+- `temperature` Set the randomness level for the sequence generator
+- `record` Record primer notes from the input MIDI device
+- `exit` Exit the application
+
+
+To get more information about a command use
+```bash
+help <command name>
+```
 
 ### Examples
 
@@ -74,7 +80,7 @@ Output
 ```bash
 Generating new sequence
 Primer: [60]
-Length 128
+Length: 128
 Temperature: 1.0
 ```
 
@@ -91,7 +97,7 @@ Output
 Setting new primer melody: [48, 51, 57, 60]
 Generating new sequence
 Primer: [48, 51, 57, 60]
-Length 128
+Length: 128
 Temperature: 1.0
 ```
 
@@ -108,7 +114,7 @@ Output
 Setting new temperature: 0.9
 Generating new sequence
 Primer: [48, 51, 57, 60]
-Length 128
+Length: 128
 Temperature: 0.9
 ```
 
@@ -134,6 +140,6 @@ note_on channel=3 note=60 velocity=102 time=0
 note_off channel=3 note=60 velocity=64 time=0
 Generating new sequence
 Primer: [48, 51, 57, 60]
-Length 128
+Length: 128
 Temperature: 1.0
 ```
