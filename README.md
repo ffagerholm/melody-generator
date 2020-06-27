@@ -2,10 +2,12 @@
 
 Generate melodies using a Magenta [Melody RNN](https://github.com/tensorflow/magenta/tree/master/magenta/models/melody_rnn) model, and control the parameters for the generation in real time from a command line interface.
 
-Capabilities:
+Features
+- Generate musical note sequences using a recurrent neural network. 
 - Send MIDI notes to a device of choice. 
-- Set a primer melody 
-- Record MIDI notes from an external device
+- Start and stop the sequence playback.
+- Set a primer melody, length and randomness for the melody generator.
+- Record MIDI notes for the primer melody, using an external device
 
 
 ## Get started
@@ -23,7 +25,7 @@ If the install fails, try upgrading pip and run again.
 
 The code uses [mido](https://mido.readthedocs.io/en/latest/) for handling MIDI, and [TensorFlow Magenta](https://magenta.tensorflow.org/) for the machine-learning models.
 
-> **NOTE** A Magenta Melody RNN model is required to run the application. Pretrained models can be dowloaded from [here](https://github.com/magenta/magenta/tree/master/magenta/models/melody_rnn#pre-trained).  
+> **NOTE** A Magenta Melody RNN model is required to run the application. Pre-trained models can be downloaded from [here](https://github.com/magenta/magenta/tree/master/magenta/models/melody_rnn#pre-trained).  
 The downloaded models should be placed in the `models` directory. This app uses the `basic_rnn` model by default and expects it to be found as `models/basic_rnn.mag`.
 
 ## Usage
@@ -119,7 +121,7 @@ Input
 mg> record 4
 ```
 
-The redcorded notes are shown in the output.
+The recorded notes are shown in the output.
 ```
 Waiting for input (4 notes)
 note_on channel=3 note=48 velocity=79 time=0
