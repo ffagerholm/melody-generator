@@ -1,9 +1,18 @@
-*.mid
-.vscode/settings.json
-
-*.pyc
-
+# OS X
 .DS_Store
+
+# VS Code
+.vscode
+
+# Python
+*.pyc
 
 # magenta models
 *.mag
+
+# virtual env
+.venv
+
+# midi files
+*.mid
+midi_files
