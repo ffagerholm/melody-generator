@@ -5,29 +5,29 @@ from itertools import cycle, islice
 from cmd import Cmd
 
 from mido import (
-    Message, 
-    MidiFile,  
-    open_input, 
+    Message,
+    MidiFile,
+    open_input,
     get_output_names
 )
 
 
 def play_notes(output, channel, notes):
-    """Play notes indefinetly."""   
+    """Play notes indefinetly."""
     t = threading.currentThread()
 
     for note in cycle(notes):
         # Start note
-        output.send(Message('note_on', 
-                            note=note.pitch, 
-                            velocity=note.velocity, 
+        output.send(Message('note_on',
+                            note=note.pitch,
+                            velocity=note.velocity,
                             channel=channel))
         # Sleep thread for note duration
         time.sleep(note.end_time - note.start_time)
         # Release note
-        output.send(Message('note_off', 
-                    note=note.pitch, 
-                    velocity=note.velocity, 
+        output.send(Message('note_off',
+                    note=note.pitch,
+                    velocity=note.velocity,
                     channel=channel))
         if getattr(t, "stop", False):
             break
@@ -48,8 +48,8 @@ class Prompt(Cmd):
     prompt = 'mg> '
     intro = "Welcome! Type ? to list commands"
 
-    def __init__(self, 
-            input_device, output_port, channel, generator, 
+    def __init__(self,
+            input_device, output_port, channel, generator,
             *args, **kwargs):
         self.primer_melody = [60]
         self.temperature = 1.0
@@ -61,21 +61,25 @@ class Prompt(Cmd):
         self.generator = generator
         super(Prompt, self).__init__(*args, **kwargs)
 
-
     def play(self, notes):
-        # stop the previous thread
+        '''Send the notes to the MIDI output device.
+        '''
+        # stop the previous thread if it exists
         if self.output_thread:
             self.output_thread.stop = True
 
         # Start new thread playing notes
-        # TODO Use same thread every time???
+        # TODO Use same thread every time
         self.output_thread = threading.Thread(
-            target=play_notes, 
-            args=(self.output_port, self.channel, notes), 
+            target=play_notes,
+            args=(self.output_port, self.channel, notes),
             daemon=True)
         self.output_thread.start()
-    
+
     def generate_and_play(self):
+        '''Generate a new sequence and play it 
+        on the output MIDI device.
+        '''
         print("Generating new sequence",
             f"Primer: {self.primer_melody}",
             f"Length {self.num_steps}",
@@ -111,7 +115,7 @@ class Prompt(Cmd):
         Generates a new sequence with the current settings.
         '''
         self.generate_and_play()
-     
+
     def do_primer(self, inp):
         '''primer [notes]
         Change the primer melody.
@@ -151,7 +155,7 @@ class Prompt(Cmd):
 
     def do_temperature(self, inp):
         '''temperature [t]
-        Change the temperature (amount of randomness) for the 
+        Change the temperature (amount of randomness) for the
         sequence generation.
         Example: temperature 1.3
         '''
@@ -165,17 +169,17 @@ class Prompt(Cmd):
 
     def do_steps(self, inp):
         '''steps [length]
-        Change the number of steps in the generated sequence. 
+        Change the number of steps in the generated sequence.
         Example: steps 64
         '''
         try:
             self.num_steps = int(inp)
         except Exception:
             print("Could not process command")
-        else:            
+        else:
             print('Setting new sequence length:', self.num_steps)
             self.generate_and_play()
-    
+
     def default(self, inp):
         if inp[:1] == 'p':
             return self.do_primer(inp[2:])

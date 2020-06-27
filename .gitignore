@@ -16,3 +16,6 @@
 # midi files
 *.mid
 midi_files
+
+# Local requirements
+requirements-freeze.txt

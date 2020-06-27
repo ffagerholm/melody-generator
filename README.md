@@ -10,16 +10,21 @@ Capabilities:
 
 ## Get started
 
-Version: `Python 3.6`  
+Version: `Python 3.6.9`
+This specific version is required due to tensorflow requirements.
+
 Install requirements by running
 
 ```bash
 pip install -r requirements.txt
 ```
 
-If install fails, try upgrading pip and run again.
+If the install fails, try upgrading pip and run again.
 
 The code uses [mido](https://mido.readthedocs.io/en/latest/) for handling MIDI, and [TensorFlow Magenta](https://magenta.tensorflow.org/) for the machine-learning models.
+
+> **NOTE** A Magenta Melody RNN model is required to run the application. Pretrained models can be dowloaded from [here](https://github.com/magenta/magenta/tree/master/magenta/models/melody_rnn#pre-trained).  
+The downloaded models should be placed in the `models` directory. This app uses the `basic_rnn` model by default and expects it to be found as `models/basic_rnn.mag`.
 
 ## Usage
 
@@ -106,7 +111,7 @@ Temperature: 0.9
 ```
 
 #### Record
-Record primer notes from the input MIDI device specified when starting the app.
+Record primer notes from the input MIDI device specified when starting the app, and generate a new sequence.
 
 To record 4 notes, run
 Input
@@ -115,7 +120,7 @@ mg> record 4
 ```
 
 The redcorded notes are shown in the output.
-```bash
+```
 Waiting for input (4 notes)
 note_on channel=3 note=48 velocity=79 time=0
 note_off channel=3 note=48 velocity=64 time=0
