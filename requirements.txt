@@ -1,5 +1,5 @@
 mido==1.2.6
-numpy==1.17.2
+numpy==1.22.0
 # See https://github.com/librosa/librosa/issues/1160
 numba==0.48
 scikit-image==0.16.2
